@@ -5,7 +5,7 @@
   server_handshake
   args: int * to_client
 
-  Performs the client side pipe 3 way handshake.
+  Performs the server side pipe 3 way handshake.
   Sets *to_client to the file descriptor to the downstream pipe.
 
   returns the file descriptor for the upstream pipe.
@@ -30,8 +30,9 @@ int server_handshake(int *to_client) {
   b = read(from_client, buffer, sizeof(buffer));
   printf("[server] handshake received: -%s-\n", buffer);
 
-  //create SYN_ACK message
+
   *to_client = open(buffer, O_WRONLY, 0);
+  //create SYN_ACK message
   sranddev();
   int r = rand() % HANDSHAKE_BUFFER_SIZE;
   sprintf(buffer, "%d", r);
@@ -61,7 +62,7 @@ int server_handshake(int *to_client) {
   =========================*/
 int client_handshake(int *to_server) {
 
-   int from_server;
+  int from_server;
   char buffer[HANDSHAKE_BUFFER_SIZE];
   char ppname[HANDSHAKE_BUFFER_SIZE];
 
