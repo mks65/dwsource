@@ -1,6 +1,11 @@
 forking: fclient fserver
 
+select: fclient sserver
+
 udp: uclient userver
+
+sserver: select_server.o networking.o
+	gcc -o server select_server.o networking.o
 
 fserver: forking_server.o networking.o
 	gcc -o server forking_server.o networking.o
@@ -19,6 +24,9 @@ client.o: client.c networking.h
 
 udp_client.o: udp_client.c networking.h
 	gcc -c udp_client.c
+
+select_server.o: select_server.c networking.h
+	gcc -c select_server.c
 
 forking_server.o: forking_server.c networking.h
 	gcc -c forking_server.c

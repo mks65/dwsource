@@ -7,6 +7,15 @@ void error_check( int i, char *s ) {
   }
 }
 
+void error_check_sock( int i, char *s, int sd ) {
+  if ( i < 0 ) {
+    printf("[%s] error %d: %s\n", s, errno, strerror(errno) );
+    close(sd);
+    exit(1);
+  }
+}
+
+
 /*=========================
   server_setup
   args:
@@ -22,7 +31,7 @@ int server_setup() {
   //setup structs for getaddrinfo
   struct addrinfo * hints, * results;
   hints = calloc(1, sizeof(struct addrinfo));
-  hints->ai_family = AF_INET6;  //IPv4 address
+  hints->ai_family = AF_INET;  //IPv4 address
   hints->ai_socktype = SOCK_STREAM;  //TCP socket
   hints->ai_flags = AI_PASSIVE;  //Use all valid addresses
   getaddrinfo(NULL, PORT, hints, &results); //NULL means use local address
@@ -31,7 +40,12 @@ int server_setup() {
   sd = socket( results->ai_family, results->ai_socktype, results->ai_protocol );
   error_check( sd, "server socket" );
   printf("[server] socket created\n");
-
+  //this code should get around the address in use error
+  int yes = 1;
+  if ( setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1 ) {
+    printf("sockopt  error\n");
+    exit(-1);
+  }
 
   //bind the socket to address and port
   i = bind( sd, results->ai_addr, results->ai_addrlen );
@@ -43,12 +57,6 @@ int server_setup() {
   error_check( i, "server listen" );
   printf("[server] socket in listen state\n");
 
-  //this code should get around the address in use error
-  int yes = 1;
-  if ( setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1 ) {
-    printf("sockopt  error\n");
-    exit(-1);
-  }
 
   //free the structs used by getaddrinfo
   free(hints);
@@ -98,7 +106,7 @@ int client_setup(char * server) {
      specifies the desired address. */
   struct addrinfo * hints, * results;
   hints = (struct addrinfo *)calloc(1, sizeof(struct addrinfo));
-  hints->ai_family = AF_INET6;  //IPv4
+  hints->ai_family = AF_INET;  //IPv4
   hints->ai_socktype = SOCK_STREAM;  //TCP socket
   getaddrinfo(server, PORT, hints, &results);
 
@@ -123,7 +131,7 @@ int udp_server_setup() {
   //setup structs for getaddrinfo
   struct addrinfo * hints, * results;
   hints = calloc(1, sizeof(struct addrinfo));
-  hints->ai_family = AF_INET6;  //IPv4 address
+  hints->ai_family = AF_INET;  //IPv4 address
   hints->ai_socktype = SOCK_DGRAM;  //UDP socket
   hints->ai_flags = AI_PASSIVE;  //Use all valid addresses
   getaddrinfo(NULL, PORT, hints, &results); //NULL means use local address
@@ -161,7 +169,7 @@ struct addrinfo *  udp_client_setup(char * server, int *sock) {
      specifies the desired address. */
   struct addrinfo * hints, * results;
   hints = (struct addrinfo *)calloc(1, sizeof(struct addrinfo));
-  hints->ai_family = AF_INET6;  //IPv4
+  hints->ai_family = AF_INET;  //IPv4
   hints->ai_socktype = SOCK_DGRAM;  //TCP socket
   getaddrinfo(server, PORT, hints, &results);
 
